@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WORLD CHECK - 世界と日本の学習ゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #E3F2FD 0%, #E8F5E8 25%, #F3E5F5 50%, #E1F5FE 75%, #E8F5E8 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 10px;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 15px 0;
+            position: relative;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #1976D2, #2E7D32);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #1976D2;
+            font-weight: bold;
+        }
+
+        .floating-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #42A5F5, #66BB6A);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .floating-menu:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #1976D2, #2E7D32);
+        }
+
+        .floating-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #1976D2, #2E7D32);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .floating-back:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #1565C0, #1B5E20);
+        }
+
+        .main-menu-screen {
+            display: block;
+        }
+
+        .category-screen {
+            display: none;
+        }
+
+        .game-mode-screen {
+            display: none;
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .population-screen {
+            display: none;
+        }
+
+        .result-screen {
+            display: none;
+        }
+
+        /* メインメニューのカテゴリカード */
+        .main-category-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .main-category-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-category-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            background: rgba(255,255,255,1);
+        }
+
+        .main-category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(25, 118, 210, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .main-category-card:hover::before {
+            left: 100%;
+        }
+
+        .main-category-emoji {
+            font-size: 60px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+
+        .main-category-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+        }
+
+        .main-category-description {
+            font-size: 14px;
+            color: #2E7D32;
+            line-height: 1.4;
+        }
+
+        /* カテゴリセクション */
+        .category-section {
+            margin-bottom: 25px;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #1976D2, #2E7D32);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        /* サブカテゴリグリッド */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .theme-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background: rgba(255,255,255,1);
+            border-color: #2E7D32;
+        }
+
+        .theme-emoji {
+            font-size: 24px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+        }
+
+        .theme-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1565C0;
+            line-height: 1.2;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+        }
+
+        /* ゲームモード選択 */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px 0;
+        }
+
+        .mode-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #1976D2;
+        }
+
+        .mode-emoji {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .mode-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+
+        .mode-description {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        /* ゲーム画面 */
+        .game-board {
+            padding: 20px 0;
+        }
+
+        .score-board {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .score {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1976D2;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .card-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+        .card.selected {
+            border-color: #1976D2;
+            background: #E3F2FD;
+            transform: scale(1.05);
+            animation: pulse 1s infinite;
+        }
+
+        .card.matched {
+            background: #E8F5E8;
+            border-color: #2E7D32;
+            animation: superMatch 1.5s ease;
+        }
+
+        .card.wrong {
+            animation: wrongMatch 0.8s ease;
+        }
+
+        .card-text {
+            font-size: 13px;
+            font-weight: bold;
+            color: #2C3E50;
+            line-height: 1.3;
+            z-index: 2;
+        }
+
+        .result-content {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .result-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: celebration 2s infinite;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .result-score {
+            font-size: 18px;
+            color: #2E7D32;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1976D2, #2E7D32);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            margin: 10px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #1565C0, #1B5E20);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .progress-bar {
+            background: #F0F0F0;
+            height: 8px;
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #1976D2, #2E7D32, #1976D2);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 0%;
+            animation: progressGlow 2s infinite;
+        }
+
+        /* エフェクト要素 */
+        .firework {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #42A5F5, #1976D2);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .parade-emoji {
+            position: fixed;
+            font-size: 40px;
+            pointer-events: none;
+            z-index: 9999;
+            animation: parade 3s linear infinite;
+        }
+
+        /* アニメーション */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(25, 118, 210, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(25, 118, 210, 0); }
+        }
+
+        @keyframes superMatch {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.3) rotate(-5deg); }
+            40% { transform: scale(0.9) rotate(5deg); }
+            60% { transform: scale(1.2) rotate(-3deg); }
+            80% { transform: scale(0.95) rotate(2deg); }
+            100% { transform: scale(1.05) rotate(0deg); }
+        }
+
+        @keyframes wrongMatch {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            10% { transform: translateX(-10px) rotate(-5deg); background: #FFEBEE; }
+            20% { transform: translateX(10px) rotate(5deg); background: #FFCDD2; }
+            30% { transform: translateX(-8px) rotate(-3deg); background: #FFEBEE; }
+            40% { transform: translateX(8px) rotate(3deg); background: #FFCDD2; }
+            50% { transform: translateX(-5px) rotate(-2deg); background: #FFEBEE; }
+            60% { transform: translateX(5px) rotate(2deg); background: #FFCDD2; }
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-10deg); }
+            50% { transform: scale(1.3) rotate(0deg); }
+            75% { transform: scale(1.2) rotate(10deg); }
+        }
+
+        @keyframes progressGlow {
+            0%, 100% { background: linear-gradient(90deg, #1976D2, #2E7D32, #1976D2); }
+            50% { background: linear-gradient(90deg, #42A5F5, #66BB6A, #42A5F5); }
+        }
+
+        @keyframes fireworkExplosion {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1) rotate(180deg); opacity: 0.8; }
+            100% { transform: scale(2) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        @keyframes parade {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            60% { transform: translateY(-3px); }
+        }
+
+        @media (max-width: 380px) {
+            .container {
+                padding-bottom: 100px;
+            }
+            
+            .theme-grid {
+                grid-template-columns: 1fr;
+                margin-bottom: 20px;
+            }
+            
+            .theme-card {
+                min-height: 70px;
+                padding: 12px 6px;
+            }
+            
+            .cards-container {
+                gap: 8px;
+            }
+            
+            .card {
+                padding: 10px;
+                min-height: 50px;
+            }
+
+            .floating-back,
+            .floating-menu {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+
+            .main-category-emoji {
+                font-size: 50px;
+            }
+
+            .main-category-title {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- フローティングメニューボタン -->
+        <div class="floating-menu" onclick="playClickSoundAndShowMainMenu()">🏠</div>
+        
+        <!-- フローティング戻るボタン -->
+        <div class="floating-back" id="floatingBack" onclick="playClickSoundAndGoBack()">◀︎</div>
+
+        <!-- メインメニュー画面 -->
+        <div class="main-menu-screen" id="mainMenuScreen">
+            <div class="header">
+                <div class="title">WORLD CHECK</div>
+                <div class="subtitle">世界と日本の学習ゲーム</div>
+            </div>
+            
+            <div class="main-category-grid">
+                <div class="main-category-card" onclick="playClickSoundAndSelectMainCategory('world')">
+                    <div class="main-category-emoji">🌍</div>
+                    <div class="main-category-title">世界の国々</div>
+                    <div class="main-category-description">アジア、ヨーロッパ、アフリカなど各大陸の国々の特徴を学ぼう</div>
+                </div>
+                
+                <div class="main-category-card" onclick="playClickSoundAndSelectMainCategory('japan')">
+                    <div class="main-category-emoji">🗾</div>
+                    <div class="main-category-title">日本の都道府県</div>
+                    <div class="main-category-description">北海道から沖縄まで、47都道府県の特色と県庁所在地を覚えよう</div>
+                </div>
+                
+                <div class="main-category-card" onclick="playClickSoundAndSelectMainCategory('heritage')">
+                    <div class="main-category-emoji">🏯</div>
+                    <div class="main-category-title">日本の世界遺産</div>
+                    <div class="main-category-description">文化遺産や自然遺産など、日本が誇る世界遺産を地域別に学ぼう</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- カテゴリ選択画面 -->
+        <div class="category-screen" id="categoryScreen">
+            <div class="header">
+                <div class="title">WORLD CHECK</div>
+                <div class="subtitle" id="categoryTitle"></div>
+            </div>
+            
+            <div id="categoryContainer">
+                <!-- 動的に生成される -->
+            </div>
+        </div>
+
+        <!-- ゲームモード選択画面 -->
+        <div class="game-mode-screen" id="gameModeScreen">
+            <div class="header">
+                <div class="title">WORLD CHECK</div>
+                <div class="subtitle" id="modeTitle"></div>
+            </div>
+            
+            <div class="mode-grid" id="modeGrid">
+                <!-- 動的に生成される -->
+            </div>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div class="game-screen" id="gameScreen">
+            <div class="header">
+                <div class="title">WORLD CHECK</div>
+                <div class="subtitle" id="currentTheme"></div>
+            </div>
+
+            <div class="score-board">
+                <div class="score">正解: <span id="score">0</span> / <span id="total">0</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="game-board">
+                <div class="cards-container">
+                    <div class="card-column" id="leftColumn"></div>
+                    <div class="card-column" id="rightColumn"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果画面 -->
+        <div class="result-screen" id="resultScreen">
+            <div class="result-content">
+                <div class="result-emoji">🎉</div>
+                <div class="result-title">おめでとう！</div>
+                <div class="result-score" id="finalScore"></div>
+                <button class="btn" onclick="playClickSoundAndShowMainMenu()">メインメニューに戻る</button>
+                <button class="btn" onclick="playClickSoundAndRestart()">もう一度</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 外部データファイルの読み込み -->
+    <script src="chiri-data.js"></script>
+    <script src="todofuken-data.js"></script>
+    <script src="sekaiisan-data.js"></script>
+    
+    <script>
+        // 初期化チェックとエラーハンドリング
+        let isInitialized = false;
+        let gameState = {
+            currentScreen: 'mainMenuScreen',
+            mainCategory: '',
+            currentTheme: '',
+            currentData: [],
+            selectedCard: null,
+            score: 0,
+            totalPairs: 0,
+            matchedPairs: 0,
+            gameMode: '',
+            screenHistory: ['mainMenuScreen']
+        };
+
+        // データマッピング
+        const DATA_MAPPING = {
+            world: 'CHIRI_DATA',
+            japan: 'REKISHI_DATA', 
+            heritage: 'SEKAIISAN_DATA'
+        };
+
+        // アイコンデータ
+        const ICONS = {
+            world: {
+                asia: "🌏",
+                africa: "🌍", 
+                europe: "🇪🇺",
+                northamerica: "🗽",
+                southamerica: "🦙",
+                oceania: "🏝️"
+            },
+            japan: {
+                hokkaido: "🗾",
+                tohoku: "🍎",
+                kanto: "🏙️",
+                chubu: "🏔️",
+                kinki: "🏯",
+                chugoku: "🌊",
+                shikoku: "🍊",
+                kyushu: "🌋"
+            },
+            heritage: {
+                hokkaido_tohoku: "🏔️",
+                higashi_nihon: "🗾",
+                kansai_chubu: "🏯",
+                nishi_nihon: "🏭",
+                kyushu_okinawa: "🌺"
+            }
+        };
+
+        // データ確認用関数
+        function checkDataIntegrity() {
+            const dataTypes = ['CHIRI_DATA', 'REKISHI_DATA', 'SEKAIISAN_DATA'];
+            
+            for (let dataType of dataTypes) {
+                if (typeof window[dataType] === 'undefined') {
+                    console.error(`${dataType} is not defined!`);
+                    return false;
+                }
+            }
+            
+            console.log('All data integrity checks passed');
+            return true;
+        }
+
+        // 音声機能
+        let audioContext = null;
+
+        function initAudio() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        function playSound(frequency, duration, type = 'sine') {
+            try {
+                initAudio();
+                if (!audioContext) return;
+
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log('Audio playback failed:', e);
+            }
+        }
+
+        function playSuccessSound() {
+            playSound(523.25, 0.2);
+            setTimeout(() => playSound(659.25, 0.2), 100);
+            setTimeout(() => playSound(783.99, 0.3), 200);
+        }
+
+        function playApplauseSound() {
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    playSound(200 + Math.random() * 300, 0.1, 'square');
+                }, i * 50);
+            }
+        }
+
+        function playClickSound() {
+            playSound(440, 0.1, 'square');
+        }
+
+        function playWrongSound() {
+            playSound(200, 0.3, 'sawtooth');
+        }
+
+        function playCelebrationSound() {
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    playSound(523.25 + i * 50, 0.3);
+                }, i * 100);
+            }
+        }
+
+        // クリック音付きイベントハンドラー
+        function playClickSoundAndShowMainMenu() {
+            playClickSound();
+            showMainMenu();
+        }
+
+        function playClickSoundAndGoBack() {
+            playClickSound();
+            goBack();
+        }
+
+        function playClickSoundAndSelectMainCategory(category) {
+            playClickSound();
+            selectMainCategory(category);
+        }
+
+        function playClickSoundAndStartMatching() {
+            playClickSound();
+            startMatchingGame();
+        }
+
+        function playClickSoundAndRestart() {
+            playClickSound();
+            restartGame();
+        }
+
+        // エフェクト関数
+        function createFirework(x, y) {
+            for (let i = 0; i < 10; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = x + 'px';
+                firework.style.top = y + 'px';
+                firework.style.animation = `fireworkExplosion 1s ease-out ${i * 0.1}s`;
+                firework.style.background = `hsl(${Math.random() * 360}, 100%, 60%)`;
+                document.body.appendChild(firework);
+
+                setTimeout(() => {
+                    if (firework.parentNode) {
+                        firework.parentNode.removeChild(firework);
+                    }
+                }, 1000 + i * 100);
+            }
+        }
+
+        function createConfetti() {
+            const colors = ['#42A5F5', '#1976D2', '#2E7D32', '#66BB6A', '#7986CB', '#9C27B0'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '-10px';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animation = `confettiFall ${2 + Math.random() * 3}s linear`;
+                document.body.appendChild(confetti);
+
+                setTimeout(() => {
+                    if (confetti.parentNode) {
+                        confetti.parentNode.removeChild(confetti);
+                    }
+                }, 5000);
+            }
+        }
+
+        function createParade() {
+            const paradeEmojis = ['🌍', '🗾', '🏯', '🎌', '⭐', '🌟', '💫', '🎁', '🎈', '🎪'];
+            
+            for (let i = 0; i < 15; i++) {
+                const emoji = document.createElement('div');
+                emoji.className = 'parade-emoji';
+                emoji.textContent = paradeEmojis[Math.floor(Math.random() * paradeEmojis.length)];
+                emoji.style.top = Math.random() * window.innerHeight + 'px';
+                emoji.style.animationDelay = i * 0.2 + 's';
+                document.body.appendChild(emoji);
+
+                setTimeout(() => {
+                    if (emoji.parentNode) {
+                        emoji.parentNode.removeChild(emoji);
+                    }
+                }, 3000 + i * 200);
+            }
+        }
+
+        // ユーティリティ関数
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 画面履歴管理
+        function pushScreen(screenId) {
+            try {
+                if (gameState.screenHistory[gameState.screenHistory.length - 1] !== screenId) {
+                    gameState.screenHistory.push(screenId);
+                }
+                gameState.currentScreen = screenId;
+                updateBackButton();
+            } catch (error) {
+                console.error('Error pushing screen:', error);
+            }
+        }
+
+        function popScreen() {
+            try {
+                if (gameState.screenHistory.length > 1) {
+                    gameState.screenHistory.pop();
+                    const previousScreen = gameState.screenHistory[gameState.screenHistory.length - 1];
+                    gameState.currentScreen = previousScreen;
+                    return previousScreen;
+                }
+                return 'mainMenuScreen';
+            } catch (error) {
+                console.error('Error popping screen:', error);
+                return 'mainMenuScreen';
+            }
+        }
+
+        function updateBackButton() {
+            try {
+                const backBtn = document.getElementById('floatingBack');
+                if (backBtn) {
+                    if (gameState.screenHistory.length > 1) {
+                        backBtn.style.display = 'flex';
+                    } else {
+                        backBtn.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating back button:', error);
+            }
+        }
+
+        // 戻る機能
+        function goBack() {
+            try {
+                const previousScreen = popScreen();
+                
+                if (gameState.currentScreen === 'gameScreen') {
+                    gameState.selectedCard = null;
+                }
+                
+                showScreen(previousScreen);
+            } catch (error) {
+                console.error('Error going back:', error);
+                showMainMenu();
+            }
+        }
+
+        // メインカテゴリ選択
+        function selectMainCategory(category) {
+            try {
+                initAudio();
+                gameState.mainCategory = category;
+                showCategoryScreen(category);
+            } catch (error) {
+                console.error('Error selecting main category:', error);
+            }
+        }
+
+        // カテゴリ画面表示
+        function showCategoryScreen(category) {
+            try {
+                const dataKey = DATA_MAPPING[category];
+                const data = window[dataKey];
+                
+                if (!data) {
+                    console.error(`Data not found for category: ${category}`);
+                    return;
+                }
+
+                const titles = {
+                    world: "🌍 世界の国々",
+                    japan: "🗾 日本の都道府県", 
+                    heritage: "🏯 日本の世界遺産"
+                };
+
+                document.getElementById('categoryTitle').textContent = titles[category];
+                
+                const categoryContainer = document.getElementById('categoryContainer');
+                categoryContainer.innerHTML = '';
+
+                const categorySection = document.createElement('div');
+                categorySection.className = 'category-section';
+                
+                const themeGrid = document.createElement('div');
+                themeGrid.className = 'theme-grid';
+                
+                const subcategories = Object.keys(data);
+                console.log('Subcategories found:', subcategories);
+
+                subcategories.forEach(subKey => {
+                    try {
+                        const subData = data[subKey];
+                        console.log(`Processing subcategory: ${subKey}`, subData);
+                        
+                        const subCard = document.createElement('div');
+                        subCard.className = 'theme-card';
+                        subCard.onclick = () => {
+                            playClickSound();
+                            selectSubcategory(subKey);
+                        };
+                        
+                        const iconCategory = ICONS[category];
+                        const icon = (iconCategory && iconCategory[subKey]) || subData.emoji || '📍';
+                        subCard.innerHTML = `
+                            <div class="theme-emoji">${icon}</div>
+                            <div class="theme-title">${subData.title}</div>
+                        `;
+                        
+                        themeGrid.appendChild(subCard);
+                    } catch (error) {
+                        console.error(`Error processing subcategory ${subKey}:`, error);
+                    }
+                });
+                
+                categorySection.appendChild(themeGrid);
+                categoryContainer.appendChild(categorySection);
+                
+                showScreen('categoryScreen');
+                
+            } catch (error) {
+                console.error('Error showing category screen:', error);
+            }
+        }
+
+        // サブカテゴリ選択
+        function selectSubcategory(subKey) {
+            try {
+                gameState.currentTheme = subKey;
+                showGameModeSelection(subKey);
+            } catch (error) {
+                console.error('Error selecting subcategory:', error);
+            }
+        }
+
+        // ゲームモード選択表示
+        function showGameModeSelection(subKey) {
+            try {
+                const dataKey = DATA_MAPPING[gameState.mainCategory];
+                const data = window[dataKey][subKey];
+                
+                const iconCategory = ICONS[gameState.mainCategory];
+                const icon = (iconCategory && iconCategory[subKey]) || data.emoji || '📍';
+                const title = `${icon}${data.title}`;
+                
+                document.getElementById('modeTitle').textContent = title;
+                
+                // ゲームモードを動的に生成
+                const modeGrid = document.getElementById('modeGrid');
+                modeGrid.innerHTML = '';
+                
+                // マッチングゲームは全カテゴリ共通
+                const matchingCard = document.createElement('div');
+                matchingCard.className = 'mode-card';
+                matchingCard.onclick = () => playClickSoundAndStartMatching();
+                matchingCard.innerHTML = `
+                    <div class="mode-emoji">🔗</div>
+                    <div class="mode-title">マッチング</div>
+                    <div class="mode-description">項目と説明をペアにしよう</div>
+                `;
+                modeGrid.appendChild(matchingCard);
+                
+                // 世界の国々の場合は人口順ゲームも追加
+                if (gameState.mainCategory === 'world') {
+                    const populationCard = document.createElement('div');
+                    populationCard.className = 'mode-card';
+                    populationCard.onclick = () => {
+                        playClickSound();
+                        alert('人口順並べゲームは開発中です');
+                    };
+                    populationCard.innerHTML = `
+                        <div class="mode-emoji">📊</div>
+                        <div class="mode-title">人口順並べ</div>
+                        <div class="mode-description">説明を人口順に配置しよう</div>
+                    `;
+                    modeGrid.appendChild(populationCard);
+                }
+                
+                showScreen('gameModeScreen');
+            } catch (error) {
+                console.error('Error showing game mode selection:', error);
+            }
+        }
+
+        // 画面切り替え
+        function showScreen(screenId) {
+            try {
+                const screens = ['mainMenuScreen', 'categoryScreen', 'gameModeScreen', 'gameScreen', 'resultScreen'];
+                screens.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.style.display = id === screenId ? 'block' : 'none';
+                    }
+                });
+                
+                if (screenId === 'mainMenuScreen') {
+                    gameState.screenHistory = ['mainMenuScreen'];
+                    gameState.currentScreen = 'mainMenuScreen';
+                } else if (gameState.screenHistory[gameState.screenHistory.length - 1] !== screenId) {
+                    gameState.screenHistory.push(screenId);
+                    gameState.currentScreen = screenId;
+                }
+                
+                updateBackButton();
+            } catch (error) {
+                console.error('Error showing screen:', error);
+            }
+        }
+
+        // メインメニュー表示
+        function showMainMenu() {
+            try {
+                showScreen('mainMenuScreen');
+            } catch (error) {
+                console.error('Error showing main menu:', error);
+            }
+        }
+
+        // マッチングゲーム開始
+        function startMatchingGame() {
+            try {
+                gameState.gameMode = 'matching';
+                
+                const dataKey = DATA_MAPPING[gameState.mainCategory];
+                const data = window[dataKey][gameState.currentTheme];
+                gameState.currentData = [...data.terms];
+                
+                const iconCategory = ICONS[gameState.mainCategory];
+                const icon = (iconCategory && iconCategory[gameState.currentTheme]) || data.emoji || '📍';
+                initializeMatchingGame(`${icon}${data.title}`);
+            } catch (error) {
+                console.error('Error starting matching game:', error);
+            }
+        }
+
+        // マッチングゲーム初期化
+        function initializeMatchingGame(title) {
+            try {
+                console.log('Initializing matching game with data:', gameState.currentData);
+                
+                if (!gameState.currentData || gameState.currentData.length === 0) {
+                    console.error('No data available for matching game!');
+                    alert('データが見つかりません。メニューに戻ります。');
+                    showMainMenu();
+                    return;
+                }
+                
+                gameState.currentData = shuffleArray(gameState.currentData);
+                
+                gameState.score = 0;
+                gameState.matchedPairs = 0;
+                gameState.totalPairs = gameState.currentData.length;
+                gameState.selectedCard = null;
+                
+                document.getElementById('currentTheme').textContent = title;
+                document.getElementById('score').textContent = gameState.score;
+                document.getElementById('total').textContent = gameState.totalPairs;
+                
+                renderMatchingGame();
+                showScreen('gameScreen');
+            } catch (error) {
+                console.error('Error initializing matching game:', error);
+            }
+        }
+
+        // マッチングゲーム描画
+        function renderMatchingGame() {
+            try {
+                console.log('Rendering matching game with data:', gameState.currentData);
+                const leftColumn = document.getElementById('leftColumn');
+                const rightColumn = document.getElementById('rightColumn');
+                
+                leftColumn.innerHTML = '';
+                rightColumn.innerHTML = '';
+                
+                const terms = shuffleArray(gameState.currentData.map(item => item.term));
+                const descriptions = shuffleArray(gameState.currentData.map(item => item.description));
+                
+                console.log('Terms:', terms);
+                console.log('Descriptions:', descriptions);
+                
+                terms.forEach((term, index) => {
+                    const card = createCard(term, 'term', index);
+                    leftColumn.appendChild(card);
+                });
+                
+                descriptions.forEach((desc, index) => {
+                    const card = createCard(desc, 'description', index);
+                    rightColumn.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error rendering matching game:', error);
+            }
+        }
+
+        // カード作成
+        function createCard(text, type, index) {
+            try {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<div class="card-text">${text}</div>`;
+                card.dataset.type = type;
+                card.dataset.text = text;
+                card.onclick = () => selectCard(card);
+                
+                card.style.animationDelay = (Math.random() * 0.5) + 's';
+                card.style.animation = 'bounce 0.6s ease-out forwards';
+                
+                return card;
+            } catch (error) {
+                console.error('Error creating card:', error);
+                return document.createElement('div');
+            }
+        }
+
+        // カード選択
+        function selectCard(card) {
+            try {
+                playClickSound();
+                
+                if (card.classList.contains('matched')) return;
+                
+                if (gameState.selectedCard) {
+                    if (gameState.selectedCard === card) {
+                        gameState.selectedCard.classList.remove('selected');
+                        gameState.selectedCard = null;
+                        return;
+                    }
+                    
+                    checkMatch(gameState.selectedCard, card);
+                } else {
+                    card.classList.add('selected');
+                    gameState.selectedCard = card;
+                }
+            } catch (error) {
+                console.error('Error selecting card:', error);
+            }
+        }
+
+        // マッチング判定
+        function checkMatch(card1, card2) {
+            try {
+                const text1 = card1.dataset.text;
+                const text2 = card2.dataset.text;
+                
+                let isMatch = false;
+                for (let item of gameState.currentData) {
+                    if ((item.term === text1 && item.description === text2) || 
+                        (item.term === text2 && item.description === text1)) {
+                        isMatch = true;
+                        break;
+                    }
+                }
+                
+                if (isMatch) {
+                    card1.classList.remove('selected');
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    
+                    gameState.score++;
+                    gameState.matchedPairs++;
+                    
+                    playSuccessSound();
+                    playApplauseSound();
+                    
+                    const rect1 = card1.getBoundingClientRect();
+                    const rect2 = card2.getBoundingClientRect();
+                    createFirework(rect1.left + rect1.width / 2, rect1.top + rect1.height / 2);
+                    createFirework(rect2.left + rect2.width / 2, rect2.top + rect2.height / 2);
+                    
+                    document.getElementById('score').textContent = gameState.score;
+                    const progress = (gameState.matchedPairs / gameState.totalPairs) * 100;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    
+                    if (gameState.matchedPairs === gameState.totalPairs) {
+                        setTimeout(showResult, 1500);
+                    }
+                } else {
+                    card1.classList.add('wrong');
+                    card2.classList.add('wrong');
+                    
+                    playWrongSound();
+                    
+                    setTimeout(() => {
+                        card1.classList.remove('selected', 'wrong');
+                        card2.classList.remove('wrong');
+                    }, 800);
+                }
+                
+                gameState.selectedCard = null;
+            } catch (error) {
+                console.error('Error checking match:', error);
+            }
+        }
+
+        // 結果表示
+        function showResult() {
+            try {
+                playCelebrationSound();
+                createConfetti();
+                createParade();
+                
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        createFirework(
+                            Math.random() * window.innerWidth,
+                            Math.random() * window.innerHeight
+                        );
+                    }, i * 300);
+                }
+                
+                const percentage = Math.round((gameState.score / gameState.totalPairs) * 100);
+                document.getElementById('finalScore').textContent = 
+                    `${gameState.score}/${gameState.totalPairs}問正解！ (${percentage}%)`;
+                
+                showScreen('resultScreen');
+                document.querySelector('.result-content').classList.add('celebrate');
+            } catch (error) {
+                console.error('Error showing result:', error);
+            }
+        }
+
+        // ゲーム再開
+        function restartGame() {
+            try {
+                startMatchingGame();
+            } catch (error) {
+                console.error('Error restarting game:', error);
+            }
+        }
+
+        // ページロード時の初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, initializing...');
+            
+            try {
+                setTimeout(() => {
+                    if (checkDataIntegrity()) {
+                        showMainMenu();
+                        isInitialized = true;
+                        console.log('WORLD CHECK initialization completed successfully');
+                    } else {
+                        console.error('Data files failed to load');
+                        document.querySelector('.container').innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: #1976D2;">
+                                <h3>データファイルの読み込みに失敗しました</h3>
+                                <p>以下のファイルが必要です:</p>
+                                <ul style="text-align: left; margin-top: 20px;">
+                                    <li>chiri-data.js</li>
+                                    <li>todofuken-data.js</li>
+                                    <li>sekaiisan-data.js</li>
+                                </ul>
+                                <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: linear-gradient(135deg, #1976D2, #2E7D32); color: white; border: none; border-radius: 5px;">再読み込み</button>
+                            </div>
+                        `;
+                    }
+                }, 100);
+                
+                document.addEventListener('click', initAudio, { once: true });
+                document.addEventListener('touchstart', initAudio, { once: true });
+            } catch (error) {
+                console.error('Error during initialization:', error);
+            }
+        });
+    </script>
+</body>
+</html>
