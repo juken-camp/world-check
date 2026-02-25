@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ワールドチェック</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Shippori+Mincho:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #edf0f5;
+            --surface: #f4f6fa;
+            --surface2: #ffffff;
+            --primary: #1a3a5c;
+            --primary-light: #2c5f8a;
+            --primary-muted: rgba(26,58,92,0.08);
+            --accent: #c4973a;
+            --accent-light: #e8be6a;
+            --accent2: #2e6b8a;
+            --danger: #c0392b;
+            --danger-light: #e74c3c;
+            --success: #1a5c45;
+            --success-light: #27ae60;
+            --text: #1a1c20;
+            --text-muted: #5a6270;
+            --text-light: #8e97a8;
+            --border: rgba(26,58,92,0.14);
+            --shadow: 0 2px 16px rgba(26,58,92,0.12);
+            --shadow-lg: 0 8px 32px rgba(26,58,92,0.18);
+            --radius: 12px;
+            --radius-lg: 18px;
+            --font-serif: 'Shippori Mincho', 'Noto Serif JP', serif;
+            --font-body: 'Noto Serif JP', 'Hiragino Mincho ProN', serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 10% 10%, rgba(46,107,138,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 90%, rgba(26,58,92,0.09) 0%, transparent 50%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            color: var(--text);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 10px 14px;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 18px 0 12px;
+        }
+
+        .title {
+            font-family: var(--font-serif);
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.12em;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+
+        .title::before {
+            content: '◆';
+            font-size: 10px;
+            color: var(--accent);
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+            opacity: 0.7;
+        }
+
+        .title::after {
+            content: '';
+            display: block;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin-top: 4px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            font-weight: 600;
+        }
+
+        /* Floating buttons */
+        .floating-menu {
+            position: fixed;
+            top: 16px; right: 16px;
+            z-index: 1000;
+            background: var(--primary);
+            border-radius: 50%;
+            width: 44px; height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.25s ease;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+
+        .floating-menu:hover {
+            transform: scale(1.08);
+            background: var(--primary-light);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .floating-back {
+            position: fixed;
+            top: 16px; left: 16px;
+            z-index: 1000;
+            background: var(--surface2);
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            width: 44px; height: 44px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.25s ease;
+            color: var(--primary);
+        }
+
+        .floating-back:hover {
+            transform: scale(1.08);
+            background: var(--primary-muted);
+            border-color: var(--primary);
+        }
+
+        .main-menu-screen { display: block; }
+        .category-screen { display: none; }
+        .game-mode-screen { display: none; }
+        .game-screen { display: none; }
+        .sorting-game-screen { display: none; }
+        .result-screen { display: none; }
+
+        /* Main category cards - 横長スタイル維持 */
+        .main-category-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            padding: 16px 20px;
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .main-category-card {
+            background: var(--surface2);
+            border-radius: var(--radius-lg);
+            padding: 18px 22px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-category-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent), var(--primary));
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .main-category-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .main-category-card:hover::before { opacity: 1; }
+
+        .main-category-emoji {
+            font-size: 34px;
+            flex-shrink: 0;
+        }
+
+        .main-category-content { flex: 1; }
+
+        .main-category-title {
+            font-family: var(--font-serif);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+        }
+
+        /* Theme grid - 2列 */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .theme-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 6px rgba(26,58,92,0.07);
+            min-height: 78px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 6px 20px rgba(26,58,92,0.15);
+            border-color: var(--accent);
+            background: #fafeff;
+        }
+
+        .theme-emoji {
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .theme-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.2;
+            letter-spacing: 0.02em;
+        }
+
+        /* Mode grid */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            padding: 16px 0;
+        }
+
+        .mode-card {
+            background: var(--surface2);
+            border-radius: var(--radius-lg);
+            padding: 22px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .mode-emoji {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .mode-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+            letter-spacing: 0.05em;
+        }
+
+        .mode-description {
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Game board */
+        .game-board { padding: 16px 0; }
+
+        .score-board {
+            background: var(--surface2);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .score-board.combo-glow {
+            animation: comboGlow 1s ease-in-out;
+        }
+
+        .score {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            margin-top: 16px;
+        }
+
+        .card-column {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .card {
+            background: var(--surface2);
+            border-radius: var(--radius);
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 2px 8px rgba(26,58,92,0.09);
+            border: 2px solid var(--border);
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 5px 18px rgba(26,58,92,0.18);
+            border-color: var(--primary);
+        }
+
+        .card:hover::before { opacity: 1; }
+
+        .card.selected {
+            border-color: var(--accent);
+            background: rgba(196,151,58,0.06);
+            transform: scale(1.04);
+            animation: selectedCardPulse 1.2s infinite;
+        }
+
+        .card.selected::before {
+            opacity: 1;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+        }
+
+        .card.matched {
+            background: rgba(26,92,69,0.07);
+            border-color: var(--success-light);
+            animation: superMatch 1.2s ease;
+        }
+
+        .card.matched::before {
+            opacity: 1;
+            background: linear-gradient(90deg, var(--success), var(--success-light));
+        }
+
+        .card.wrong { animation: dramaticWrongAnimation 1s ease; }
+
+        .card-text {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.3;
+            z-index: 2;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            letter-spacing: 0.02em;
+        }
+
+        .card[data-type="description"] .card-text {
+            font-size: 11px;
+            line-height: 1.2;
+            -webkit-line-clamp: 4;
+        }
+
+        /* Sorting game */
+        .sorting-game-container { padding: 16px 0; }
+
+        .sorting-instruction {
+            background: var(--surface2);
+            border-radius: var(--radius);
+            padding: 13px 16px;
+            margin-bottom: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .sorting-game-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            min-height: 400px;
+        }
+
+        .drop-zone {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 10px;
+            min-height: 400px;
+        }
+
+        .drop-zone-title {
+            text-align: center;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            padding: 8px;
+            background: var(--surface2);
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(26,58,92,0.08);
+            font-size: 12px;
+            letter-spacing: 0.04em;
+        }
+
+        .source-cards {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 10px;
+            min-height: 400px;
+            border: 1px solid var(--border);
+        }
+
+        .sorting-card, .drop-slot {
+            background: var(--surface2);
+            border-radius: 9px;
+            padding: 10px;
+            margin: 7px 0;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 1px 5px rgba(26,58,92,0.09);
+            border: 2px solid var(--border);
+            font-size: 11px;
+            color: var(--text);
+            text-align: center;
+            line-height: 1.3;
+            height: 50px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .drop-slot {
+            background: var(--surface);
+            border: 2px dashed rgba(26,58,92,0.2);
+            color: var(--text-light);
+        }
+
+        .drop-slot.active {
+            border-color: var(--primary);
+            background: var(--primary-muted);
+        }
+
+        .drop-slot.filled {
+            background: var(--surface2);
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+
+        .drop-slot.filled.correct {
+            background: rgba(26,92,69,0.07);
+            border-color: var(--success-light);
+        }
+
+        .drop-slot.filled.wrong {
+            background: rgba(192,57,43,0.07);
+            border-color: var(--danger-light);
+            animation: epicShake 0.8s ease-in-out;
+        }
+
+        .sorting-card strong, .drop-slot strong {
+            font-weight: 700;
+            margin-bottom: 1px;
+            font-size: 11px;
+            line-height: 1.1;
+            display: block;
+            color: var(--primary);
+        }
+
+        .sorting-card small, .drop-slot small {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 9px;
+            line-height: 1.1;
+            margin-top: 1px;
+            display: block;
+        }
+
+        .sorting-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(26,58,92,0.18);
+            border-color: var(--primary);
+        }
+
+        .sorting-card.selected {
+            background: rgba(196,151,58,0.06);
+            border-color: var(--accent);
+            transform: scale(1.04);
+            animation: selectedCardPulse 1.2s infinite;
+        }
+
+        .sorting-card.placed {
+            opacity: 0.25;
+            pointer-events: none;
+        }
+
+        .drop-slot::before {
+            content: attr(data-position);
+            position: absolute;
+            left: 6px; top: 4px;
+            font-size: 9px;
+            color: var(--text-light);
+            font-weight: 700;
+        }
+
+        .drop-slot.filled::before { display: none; }
+
+        .drop-slot.filled:hover {
+            background: rgba(26,58,92,0.05);
+            border-color: var(--border);
+            cursor: pointer;
+        }
+
+        .drop-slot.filled.correct:hover {
+            background: rgba(26,92,69,0.12);
+        }
+
+        .drop-slot.filled.wrong:hover {
+            background: rgba(192,57,43,0.1);
+        }
+
+        /* Result */
+        .result-content {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .result-emoji {
+            font-size: 52px;
+            margin-bottom: 20px;
+            animation: celebration 2s infinite;
+        }
+
+        .result-title {
+            font-family: var(--font-serif);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .result-score {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: #edf0f5;
+            border: none;
+            border-radius: 30px;
+            padding: 13px 28px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 3px 14px rgba(26,58,92,0.3);
+            margin: 8px;
+            letter-spacing: 0.06em;
+            font-family: var(--font-body);
+        }
+
+        .btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26,58,92,0.35);
+        }
+
+        .progress-bar {
+            background: rgba(26,58,92,0.1);
+            height: 6px;
+            border-radius: 3px;
+            margin: 12px 0 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* Effects */
+        .screen-shake { animation: screenShake 0.5s ease-in-out; }
+
+        /* Floating points / combo effects */
+        .floating-points {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            font-family: var(--font-serif);
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 1px 1px 0 var(--primary);
+        }
+
+        .combo-effect {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            font-family: var(--font-serif);
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 2px 2px 0 var(--primary);
+        }
+
+        .mega-firework {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .star-burst {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .rainbow-confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            border-radius: 2px;
+        }
+
+        /* Animations */
+        @keyframes selectedCardPulse {
+            0% { box-shadow: 0 0 0 0 rgba(196,151,58,0.6); transform: scale(1.04); }
+            50% { box-shadow: 0 0 0 10px rgba(196,151,58,0); transform: scale(1.06); }
+            100% { box-shadow: 0 0 0 0 rgba(196,151,58,0); transform: scale(1.04); }
+        }
+
+        @keyframes superMatch {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.28) rotate(-3deg); }
+            40% { transform: scale(0.92) rotate(3deg); }
+            60% { transform: scale(1.15) rotate(-2deg); }
+            80% { transform: scale(0.97) rotate(1deg); }
+            100% { transform: scale(1.04) rotate(0deg); }
+        }
+
+        @keyframes dramaticWrongAnimation {
+            0%, 100% { transform: translateX(0) rotate(0deg); background: var(--surface2); }
+            10% { transform: translateX(-10px) rotate(-4deg); background: rgba(231,76,60,0.1); }
+            20% { transform: translateX(10px) rotate(4deg); background: rgba(231,76,60,0.15); }
+            30% { transform: translateX(-8px) rotate(-3deg); }
+            40% { transform: translateX(8px) rotate(3deg); }
+            50% { transform: translateX(-6px) rotate(-2deg); }
+            60% { transform: translateX(6px) rotate(2deg); }
+            70% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+            90% { transform: translateX(-2px); }
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.15) rotate(-8deg); }
+            50% { transform: scale(1.22) rotate(0deg); }
+            75% { transform: scale(1.15) rotate(8deg); }
+        }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-2px, -1px); }
+            20%, 40%, 60%, 80% { transform: translate(2px, 1px); }
+        }
+
+        @keyframes epicShake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            15% { transform: translateX(-7px) rotate(-2deg); }
+            30% { transform: translateX(7px) rotate(2deg); }
+            45% { transform: translateX(-5px) rotate(-1deg); }
+            60% { transform: translateX(5px) rotate(1deg); }
+            75% { transform: translateX(-3px); }
+            90% { transform: translateX(3px); }
+        }
+
+        @keyframes comboGlow {
+            0% { box-shadow: var(--shadow); transform: scale(1); }
+            50% { box-shadow: 0 0 24px rgba(196,151,58,0.5), 0 0 48px rgba(26,58,92,0.3); transform: scale(1.03); }
+            100% { box-shadow: var(--shadow); transform: scale(1); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1); }
+            10% { transform: translateY(-4px) scale(1.04); }
+            40% { transform: translateY(-6px) scale(1.06); }
+        }
+
+        @media (max-width: 380px) {
+            .container { padding: 8px 10px; padding-bottom: 100px; }
+            .title { font-size: 22px; }
+            .main-category-grid { gap: 10px; padding: 12px 14px; }
+            .main-category-card { padding: 12px 16px; min-height: 58px; gap: 12px; }
+            .main-category-emoji { font-size: 28px; }
+            .main-category-title { font-size: 15px; }
+            .theme-grid { grid-template-columns: 1fr; }
+            .theme-card { min-height: 68px; padding: 10px 6px; }
+            .cards-container { gap: 7px; }
+            .card { padding: 8px; height: 55px; }
+            .card-text { font-size: 11px; -webkit-line-clamp: 2; }
+            .card[data-type="description"] .card-text { font-size: 9px; -webkit-line-clamp: 3; }
+            .sorting-game-board { grid-template-columns: 1fr; gap: 12px; }
+            .mode-grid { grid-template-columns: 1fr; gap: 12px; }
+            .floating-back, .floating-menu { width: 40px; height: 40px; font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- フローティングメニューボタン -->
+        <div class="floating-menu" onclick="playClickSoundAndShowMainMenu()">🏠</div>
+        
+        <!-- フローティング戻るボタン -->
+        <div class="floating-back" id="floatingBack" onclick="playClickSoundAndGoBack()">◀︎</div>
+
+        <!-- メインメニュー画面 -->
+        <div class="main-menu-screen" id="mainMenuScreen">
+            <div class="header">
+                <div class="title">ワールドチェック</div>
+                <div class="subtitle">国・地域マッチングゲーム</div>
+            </div>
+            
+            <div class="main-category-grid">
+                <div class="main-category-card" onclick="playClickSoundAndSelectMainCategory('world')">
+                    <div class="main-category-emoji">🌍</div>
+                    <div class="main-category-content">
+                        <div class="main-category-title">世界の国々</div>
+                    </div>
+                </div>
+                
+                <div class="main-category-card" onclick="playClickSoundAndSelectMainCategory('japan')">
+                    <div class="main-category-emoji">🗾</div>
+                    <div class="main-category-content">
+                        <div class="main-category-title">日本の都道府県</div>
+                    </div>
+                </div>
+                
+                <div class="main-category-card" onclick="playClickSoundAndSelectMainCategory('heritage')">
+                    <div class="main-category-emoji">🏯</div>
+                    <div class="main-category-content">
+                        <div class="main-category-title">日本の世界遺産</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- カテゴリ選択画面 -->
+        <div class="category-screen" id="categoryScreen">
+            <div class="header">
+                <div class="title">ワールドチェック</div>
+                <div class="subtitle" id="categoryTitle"></div>
+            </div>
+            
+            <div id="categoryContainer">
+                <!-- 動的に生成される -->
+            </div>
+        </div>
+
+        <!-- ゲームモード選択画面 -->
+        <div class="game-mode-screen" id="gameModeScreen">
+            <div class="header">
+                <div class="title">ワールドチェック</div>
+                <div class="subtitle" id="modeTitle"></div>
+            </div>
+            
+            <div class="mode-grid" id="modeGrid">
+                <!-- 動的に生成される -->
+            </div>
+        </div>
+
+        <!-- マッチングゲーム画面 -->
+        <div class="game-screen" id="gameScreen">
+            <div class="header">
+                <div class="title">ワールドチェック</div>
+                <div class="subtitle" id="currentTheme"></div>
+            </div>
+
+            <div class="score-board" id="scoreBoard">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="score">✓ <span id="score">0</span> 問正解</div>
+                    <div style="font-size:12px; color:var(--text-muted);">全 <span id="total">0</span> 問</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="game-board">
+                <div class="cards-container">
+                    <div class="card-column" id="leftColumn"></div>
+                    <div class="card-column" id="rightColumn"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 人口順並べゲーム画面 -->
+        <div class="sorting-game-screen" id="sortingGameScreen">
+            <div class="header">
+                <div class="title">ワールドチェック</div>
+                <div class="subtitle" id="sortingTheme"></div>
+            </div>
+
+            <div class="score-board" id="sortingScoreBoard">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="score">✓ <span id="sortingScore">0</span> 問正解</div>
+                    <div style="font-size:12px; color:var(--text-muted);">全 <span id="sortingTotal">0</span> 問</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sortingProgressFill"></div>
+                </div>
+            </div>
+
+            <div class="sorting-game-container">
+                <div class="sorting-instruction">
+                    👥 右のカードをタップして左に人口順に並べよう！
+                </div>
+                
+                <div class="sorting-game-board">
+                    <div class="drop-zone">
+                        <div class="drop-zone-title">人口配置エリア</div>
+                        <div id="dropSlots">
+                            <!-- 動的に生成される -->
+                        </div>
+                    </div>
+                    
+                    <div class="source-cards">
+                        <div class="drop-zone-title">国名カード</div>
+                        <div id="sourceCards">
+                            <!-- 動的に生成される -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果画面 -->
+        <div class="result-screen" id="resultScreen">
+            <div class="result-content">
+                <div class="result-emoji">🎉</div>
+                <div class="result-title">おめでとう！</div>
+                <div class="result-score" id="finalScore"></div>
+                <button class="btn" onclick="playClickSoundAndShowMainMenu()">メインメニューに戻る</button>
+                <button class="btn" onclick="playClickSoundAndRestart()">もう一度</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== データ定義 =====
+        const CHIRI_DATA = {
+            asia: {
+                title: "アジア州",
+                description: "アジア各国の特徴を覚えよう",
+                emoji: "🌏",
+                terms: [
+                    { term: "インド", description: "人口第1位の人口を誇り、IT産業が急成長" },
+                    { term: "中国", description: "世界2位の人口で、製造業が盛ん" },
+                    { term: "インドネシア", description: "東南アジア最大の島国でイスラム教徒が多い" },
+                    { term: "パキスタン", description: "イスラム教国で農業が主要産業" },
+                    { term: "バングラデシュ", description: "縫製業が盛んで人口密度が高い" },
+                    { term: "日本", description: "技術力が高く自動車・電機産業が世界的" },
+                    { term: "フィリピン", description: "多島国で英語が公用語の一つ" },
+                    { term: "ベトナム", description: "経済成長が著しく米の輸出が盛ん" },
+                    { term: "トルコ", description: "アジアとヨーロッパの架け橋として位置" },
+                    { term: "イラン", description: "石油産出国でペルシャ文化の影響が大きい" },
+                    { term: "タイ", description: "観光業が盛んで「微笑みの国」として知られる" },
+                    { term: "韓国", description: "IT製品や自動車輸出で急成長した国" },
+                    { term: "イラク", description: "石油埋蔵量が豊富で中東の重要国" },
+                    { term: "サウジアラビア", description: "イスラム教の聖地メッカがある" },
+                    { term: "ネパール", description: "ヒマラヤ山脈があり観光業が主要産業" },
+                    { term: "スリランカ", description: "紅茶の生産が盛んで「インド洋の真珠」" },
+                    { term: "カザフスタン", description: "資源が豊富で中央アジア最大の国土" },
+                    { term: "ミャンマー", description: "天然ガス資源が豊富な東南アジアの国" },
+                    { term: "シンガポール", description: "東南アジアの貿易拠点で金融業が発展" },
+                    { term: "マレーシア", description: "ゴムやパーム油の生産が盛んな多民族国家" }
+                ]
+            },
+            africa: {
+                title: "アフリカ州",
+                description: "アフリカ各国の特徴を覚えよう",
+                emoji: "🌍",
+                terms: [
+                    { term: "ナイジェリア", description: "アフリカ最大の人口で石油資源が豊富" },
+                    { term: "エチオピア", description: "独立を維持した歴史を持ちコーヒー発祥地" },
+                    { term: "エジプト", description: "ナイル川文明が栄えた歴史的な国" },
+                    { term: "コンゴ民主共和国", description: "鉱物資源が豊富で第二次コンゴ戦争の舞台" },
+                    { term: "タンザニア", description: "キリマンジャロ山やサファリ観光で有名" },
+                    { term: "南アフリカ", description: "アフリカ最大の経済大国で金鉱が有名" },
+                    { term: "ケニア", description: "サファリ観光とコーヒー生産が主要産業" },
+                    { term: "アルジェリア", description: "アフリカ最大の国土面積を持つ" },
+                    { term: "スーダン", description: "ナイル川沿いに農業が盛んな国" },
+                    { term: "モロッコ", description: "イスラム文化が色濃く観光が主要産業" },
+                    { term: "アンゴラ", description: "石油・ダイヤモンドが主要輸出品" },
+                    { term: "ガーナ", description: "カカオ生産が盛んな西アフリカの国" },
+                    { term: "モザンビーク", description: "インド洋に面した天然ガス産出国" },
+                    { term: "コートジボワール", description: "カカオの生産量が世界一" },
+                    { term: "チュニジア", description: "観光業が盛んで地中海沿岸に位置" },
+                    { term: "セネガル", description: "漁業が盛んでフランス語圏の国" }
+                ]
+            },
+            europe: {
+                title: "ヨーロッパ州",
+                description: "ヨーロッパ各国の特徴を覚えよう",
+                emoji: "🇪🇺",
+                terms: [
+                    { term: "ロシア", description: "世界最大の面積を持ち資源が豊富" },
+                    { term: "ドイツ", description: "ヨーロッパ最大の経済大国で自動車産業が盛ん" },
+                    { term: "イギリス", description: "産業革命発祥の地で金融業が主要産業" },
+                    { term: "フランス", description: "ワインやファッションで世界的に有名" },
+                    { term: "イタリア", description: "古代ローマの遺跡とピザで有名" },
+                    { term: "スペイン", description: "観光業が主要でフラメンコの本場" },
+                    { term: "ウクライナ", description: "穀倉地帯として知られる東欧の国" },
+                    { term: "ポーランド", description: "EU加盟国で製造業が発展" },
+                    { term: "ルーマニア", description: "ドラキュラ伝説や多様な文化を持つ国" },
+                    { term: "オランダ", description: "チューリップや風車が象徴の貿易立国" },
+                    { term: "ベルギー", description: "EUの本部がありチョコレートが有名" },
+                    { term: "ギリシャ", description: "古代文明発祥の地で観光が盛ん" },
+                    { term: "スウェーデン", description: "福祉国家として有名で高い生活水準" },
+                    { term: "ハンガリー", description: "温泉が多く音楽文化が豊か" },
+                    { term: "スイス", description: "金融業が盛んでアルプスの山々が有名" },
+                    { term: "オーストリア", description: "音楽と美しい景観で知られる国" },
+                    { term: "フィンランド", description: "教育水準が高く自然が豊か" },
+                    { term: "デンマーク", description: "幸福度が高く風力発電が進んだ国" }
+                ]
+            },
+            northamerica: {
+                title: "北アメリカ州",
+                description: "北アメリカ各国の特徴を覚えよう",
+                emoji: "🗽",
+                terms: [
+                    { term: "アメリカ合衆国", description: "世界最大の経済力と軍事力を持つ国" },
+                    { term: "メキシコ", description: "観光地やマヤ文明の遺跡が有名" },
+                    { term: "カナダ", description: "広大な自然と資源が豊富な北米の国" },
+                    { term: "グアテマラ", description: "マヤ文明の遺跡が点在する国" },
+                    { term: "キューバ", description: "砂糖と葉巻で知られるカリブの国" },
+                    { term: "ドミニカ共和国", description: "観光業と野球が盛んな国" },
+                    { term: "ハイチ", description: "西半球初の黒人共和国でフランス語圏" },
+                    { term: "ホンジュラス", description: "バナナ輸出が主要な中米の国" },
+                    { term: "エルサルバドル", description: "中米で最も面積が小さい国" },
+                    { term: "コスタリカ", description: "自然保護と観光が盛んな国" },
+                    { term: "パナマ", description: "運河を有する国際貿易の要所" },
+                    { term: "ベリーズ", description: "サンゴ礁が美しく観光業が発展" },
+                    { term: "ジャマイカ", description: "レゲエ音楽とコーヒーが有名" },
+                    { term: "トリニダード・トバゴ", description: "カリブ地域の石油産出国" }
+                ]
+            },
+            southamerica: {
+                title: "南アメリカ州",
+                description: "南アメリカ各国の特徴を覚えよう",
+                emoji: "🦙",
+                terms: [
+                    { term: "ブラジル", description: "アマゾン川やサッカーで有名な国" },
+                    { term: "コロンビア", description: "コーヒー生産とエメラルドが有名" },
+                    { term: "アルゼンチン", description: "タンゴと牧畜業が盛んな国" },
+                    { term: "ペルー", description: "インカ帝国の遺跡マチュピチュがある" },
+                    { term: "ベネズエラ", description: "石油埋蔵量が多い南米の国" },
+                    { term: "チリ", description: "銅の生産量が世界一で南北に細長い国" },
+                    { term: "エクアドル", description: "赤道直下に位置しガラパゴス諸島がある" },
+                    { term: "ボリビア", description: "アンデス山脈の内陸国で資源が豊富" },
+                    { term: "パラグアイ", description: "内陸国で水力発電が主要産業" },
+                    { term: "ウルグアイ", description: "南米で最も安定した国の一つ" },
+                    { term: "ガイアナ", description: "英語を公用語とする南米の国" },
+                    { term: "スリナム", description: "多民族国家で鉱物資源が豊富" }
+                ]
+            },
+            oceania: {
+                title: "オセアニア州",
+                description: "オセアニア各国の特徴を覚えよう",
+                emoji: "🏝️",
+                terms: [
+                    { term: "オーストラリア", description: "広大な自然と資源が豊富な国" },
+                    { term: "パプアニューギニア", description: "多くの民族と独特の文化がある国" },
+                    { term: "ニュージーランド", description: "羊やキウイで有名な島国" },
+                    { term: "フィジー", description: "観光業が主要で美しいビーチがある" },
+                    { term: "ソロモン諸島", description: "第二次大戦で激戦地となった島々" },
+                    { term: "サモア", description: "伝統文化と美しい自然が特徴" },
+                    { term: "トンガ", description: "ポリネシア唯一の王国として知られる" },
+                    { term: "バヌアツ", description: "火山と観光業が盛んな国" },
+                    { term: "ミクロネシア", description: "多くの島々が連なる太平洋の国" },
+                    { term: "パラオ", description: "美しい海と観光業が主産業" },
+                    { term: "キリバス", description: "海面上昇の影響を受ける小国" },
+                    { term: "ツバル", description: "地球温暖化で注目される島国" },
+                    { term: "ナウル", description: "リン鉱石で一時的に繁栄した国" },
+                    { term: "クック諸島", description: "ニュージーランドとの連携が深い島々" }
+                ]
+            }
+        };
+
+        const REKISHI_DATA = {
+            hokkaido: {
+                title: "北海道地方",
+                description: "北海道地方の都道府県を覚えよう",
+                emoji: "🗾",
+                terms: [
+                    { term: "北海道 札幌市", description: "日本最大の面積を持ち、酪農や漁業が盛んで、観光地として札幌や富良野が有名" }
+                ]
+            },
+            tohoku: {
+                title: "東北地方",
+                description: "東北地方の都道府県を覚えよう",
+                emoji: "🗾",
+                terms: [
+                    { term: "青森県 青森市", description: "りんごの生産量が日本一。ねぶた祭りや十和田湖など観光資源が豊富" },
+                    { term: "岩手県 盛岡市", description: "広大な面積を持ち、平泉の中尊寺が世界遺産に登録。三陸海岸も魅力的" },
+                    { term: "宮城県 仙台市", description: "仙台七夕祭りで有名。松島は日本三景の一つで観光地として人気" },
+                    { term: "秋田県 秋田市", description: "秋田美人の地で知られ、米や酒の生産が盛ん。大曲の花火大会が有名" },
+                    { term: "山形県 山形市", description: "さくらんぼや米沢牛が名産。蔵王連峰や銀山温泉など自然観光地が多い" },
+                    { term: "福島県 福島市", description: "果物や会津漆器が有名。東日本大震災後の復興が進む地方でもある" }
+                ]
+            },
+            kanto: {
+                title: "関東地方",
+                description: "関東地方の都道府県を覚えよう",
+                emoji: "🗾",
+                terms: [
+                    { term: "茨城県 水戸市", description: "筑波研究学園都市が先端技術の拠点。霞ヶ浦など自然も豊か" },
+                    { term: "栃木県 宇都宮市", description: "日光東照宮や華厳滝が世界遺産。いちごの生産も全国有数" },
+                    { term: "群馬県 前橋市", description: "草津温泉や富岡製糸場が観光名所。こんにゃくの生産が日本一" },
+                    { term: "埼玉県 さいたま市", description: "首都圏の住宅地として発展。長瀞の渓谷や秩父夜祭も人気" },
+                    { term: "千葉県 千葉市", description: "成田空港や東京ディズニーリゾートがある。農業も盛んな地域" },
+                    { term: "東京都 新宿区", description: "日本の政治・経済・文化の中心。観光地として浅草や新宿も有名" },
+                    { term: "神奈川県 横浜市", description: "横浜中華街や鎌倉大仏など観光地多数。港町としても歴史が深い" }
+                ]
+            },
+            chubu: {
+                title: "中部地方",
+                description: "中部地方の都道府県を覚えよう",
+                emoji: "🗾",
+                terms: [
+                    { term: "新潟県 新潟市", description: "米どころとして有名で、魚沼産コシヒカリが特に評価が高い" },
+                    { term: "富山県 富山市", description: "黒部ダムや立山連峰が観光地。薬売りの伝統も続いている" },
+                    { term: "石川県 金沢市", description: "金沢の兼六園や伝統工芸が有名。能登半島も観光地として人気" },
+                    { term: "福井県 福井市", description: "恐竜博物館が人気で、越前ガニや眼鏡の生産地としても有名" },
+                    { term: "山梨県 甲府市", description: "富士山や富士五湖が観光名所。ぶどうやワインの産地として知られる" },
+                    { term: "長野県 長野市", description: "軽井沢や上高地など自然観光地が豊富で、そばの生産が盛ん" },
+                    { term: "岐阜県 岐阜市", description: "白川郷の合掌造りが世界遺産。飛騨牛や高山祭も有名" },
+                    { term: "静岡県 静岡市", description: "お茶の生産量が全国一。富士山や熱海温泉など観光資源が多い" },
+                    { term: "愛知県 名古屋市", description: "トヨタ自動車の拠点があり、名古屋城や味噌文化が特徴的" }
+                ]
+            },
+            kinki: {
+                title: "近畿地方",
+                description: "近畿地方の都道府県を覚えよう",
+                emoji: "🗾",
+                terms: [
+                    { term: "三重県 津市", description: "伊勢神宮が観光の中心。松阪牛や真珠養殖が世界的に有名" },
+                    { term: "滋賀県 大津市", description: "琵琶湖を有し、近江牛や彦根城などの観光地も魅力的" },
+                    { term: "京都府 京都市", description: "清水寺や金閣寺などの文化財が多く、和食の文化も深い" },
+                    { term: "大阪府 大阪市", description: "「食い倒れの街」と呼ばれ、USJや通天閣など観光地も多い" },
+                    { term: "兵庫県 神戸市", description: "神戸牛や姫路城で有名。淡路島などの自然観光地もある" },
+                    { term: "奈良県 奈良市", description: "東大寺や薬師寺など古代日本の文化が色濃く残る地域" },
+                    { term: "和歌山県 和歌山市", description: "熊野古道が世界遺産。梅や高野山も観光名所として人気" }
+                ]
+            },
+            chugoku: {
+                title: "中国地方",
+                description: "中国地方の都道府県を覚えよう",
+                emoji: "🗾",
+                terms: [
+                    { term: "鳥取県 鳥取市", description: "鳥取砂丘が有名。二十世紀梨の産地で、人口は全国最少" },
+                    { term: "島根県 松江市", description: "出雲大社や松江城など歴史的観光地が豊富" },
+                    { term: "岡山県 岡山市", description: "桃太郎伝説の地で、後楽園や倉敷美観地区が観光の目玉" },
+                    { term: "広島県 広島市", description: "平和記念公園と原爆ドームが世界遺産。宮島の厳島神社も有名" },
+                    { term: "山口県 山口市", description: "萩焼やフグ料理が特産。関門海峡を挟んで九州と接する" }
+                ]
+            },
+            shikoku: {
+                title: "四国地方",
+                description: "四国地方の都道府県を覚えよう",
+                emoji: "🗾",
+                terms: [
+                    { term: "徳島県 徳島市", description: "阿波踊りが観光名所。鳴門海峡の渦潮も有名" },
+                    { term: "香川県 高松市", description: "讃岐うどんの本場で、小豆島など観光資源が豊富" },
+                    { term: "愛媛県 松山市", description: "道後温泉やみかんの生産で知られる" },
+                    { term: "高知県 高知市", description: "坂本龍馬の出身地で、カツオのたたきが名物" }
+                ]
+            },
+            kyushu: {
+                title: "九州地方",
+                description: "九州地方の都道府県を覚えよう",
+                emoji: "🗾",
+                terms: [
+                    { term: "福岡県 福岡市", description: "博多ラーメンや太宰府天満宮が有名。九州の経済中心地" },
+                    { term: "佐賀県 佐賀市", description: "有田焼や伊万里焼が国際的に評価されている" },
+                    { term: "長崎県 長崎市", description: "異国文化が融合した街並みと原爆資料館が観光地" },
+                    { term: "熊本県 熊本市", description: "熊本城や阿蘇山が観光名所。馬刺しも名物料理" },
+                    { term: "大分県 大分市", description: "別府温泉や湯布院など全国屈指の温泉地帯" },
+                    { term: "宮崎県 宮崎市", description: "高千穂峡やマンゴーの特産で観光が盛ん" },
+                    { term: "鹿児島県 鹿児島市", description: "桜島や焼酎文化が特徴。西郷隆盛の出身地" },
+                    { term: "沖縄県 那覇市", description: "美しい海や琉球文化が魅力。世界遺産の首里城も有名" }
+                ]
+            }
+        };
+
+        const SEKAIISAN_DATA = {
+            hokkaido_tohoku: {
+                title: "北海道と東北",
+                description: "北海道と東北地方の世界遺産",
+                emoji: "🏔️",
+                terms: [
+                    {
+                        term: "知床",
+                        description: "手つかずの自然が残る、生態系の宝庫"
+                    },
+                    {
+                        term: "白神山地",
+                        description: "世界最大級の広大なブナ原生林"
+                    },
+                    {
+                        term: "縄文遺跡群",
+                        description: "縄文文化を示す貴重な遺跡群"
+                    },
+                    {
+                        term: "平泉",
+                        description: "浄土思想を表現した仏教建築と庭園"
+                    }
+                ]
+            },
+            higashi_nihon: {
+                title: "東日本の遺産",
+                description: "東日本地方の世界遺産",
+                emoji: "🗾",
+                terms: [
+                    {
+                        term: "日光の社寺",
+                        description: "徳川家康を祀る、豪華絢爛な神社仏閣"
+                    },
+                    {
+                        term: "富士山",
+                        description: "信仰と芸術の対象、日本の象徴的な山"
+                    },
+                    {
+                        term: "富岡製糸場",
+                        description: "日本近代化の象徴、初の機械製糸工場"
+                    },
+                    {
+                        term: "佐渡島の金山",
+                        description: "江戸時代の金採掘技術と歴史を伝える地"
+                    },
+                    {
+                        term: "小笠原諸島",
+                        description: "固有種が多い、世界的に重要な生態系"
+                    }
+                ]
+            },
+            kansai_chubu: {
+                title: "関西と中部",
+                description: "関西と中部地方の世界遺産",
+                emoji: "🏯",
+                terms: [
+                    {
+                        term: "白川郷",
+                        description: "豪雪地帯の知恵が詰まった合掌造り集落"
+                    },
+                    {
+                        term: "姫路城",
+                        description: "白鷺城の愛称、美しい天守閣を持つ名城"
+                    },
+                    {
+                        term: "古都京都",
+                        description: "千年にわたり日本文化を育んだ都"
+                    },
+                    {
+                        term: "古都奈良",
+                        description: "仏教文化が栄え、国際交流の要所"
+                    },
+                    {
+                        term: "紀伊山地",
+                        description: "巡礼の道と自然信仰の融合地"
+                    },
+                    {
+                        term: "法隆寺",
+                        description: "世界最古の木造建築、仏教文化の遺産"
+                    },
+                    {
+                        term: "厳島神社",
+                        description: "海上に建つ社殿と赤い大鳥居が象徴"
+                    },
+                    {
+                        term: "石見銀山",
+                        description: "江戸時代、日本の経済を支えた銀鉱山"
+                    }
+                ]
+            },
+            nishi_nihon: {
+                title: "西日本の遺産",
+                description: "西日本地方の世界遺産",
+                emoji: "🏭",
+                terms: [
+                    {
+                        term: "産業革命遺産",
+                        description: "近代化を推進した工場と港湾施設"
+                    },
+                    {
+                        term: "原爆ドーム",
+                        description: "原爆の悲劇を伝える平和の象徴"
+                    }
+                ]
+            },
+            kyushu_okinawa: {
+                title: "九州と沖縄",
+                description: "九州と沖縄地方の世界遺産",
+                emoji: "🌺",
+                terms: [
+                    {
+                        term: "沖ノ島",
+                        description: "古代祭祀の舞台、海の聖地"
+                    },
+                    {
+                        term: "長崎の教会群とキリシタン関連遺産",
+                        description: "信仰を守ったキリシタンの歴史的遺産"
+                    },
+                    {
+                        term: "潜伏キリシタン関連遺産",
+                        description: "弾圧下で信仰を続けた隠れキリシタンの証"
+                    },
+                    {
+                        term: "屋久島",
+                        description: "樹齢千年を超える屋久杉が茂る自然遺産"
+                    },
+                    {
+                        term: "奄美大島",
+                        description: "生物多様性が豊かな亜熱帯の楽園"
+                    },
+                    {
+                        term: "琉球王国",
+                        description: "琉球独自の城（グスク）と文化遺跡"
+                    }
+                ]
+            }
+        };
+
+        // ===== ゲーム状態管理 =====
+        let gameState = {
+            currentScreen: 'mainMenuScreen',
+            mainCategory: '',
+            currentTheme: '',
+            currentData: [],
+            selectedCard: null,
+            score: 0,
+            totalPairs: 0,
+            matchedPairs: 0,
+            gameMode: '',
+            screenHistory: ['mainMenuScreen'],
+            sortingData: [],
+            placedCards: [],
+            selectedSortingCard: null,
+            comboCount: 0,
+            lastMatchTime: 0
+        };
+
+        // データマッピング
+        const DATA_MAPPING = {
+            world: CHIRI_DATA,
+            japan: REKISHI_DATA, 
+            heritage: SEKAIISAN_DATA
+        };
+
+        // アイコンデータ
+        const ICONS = {
+            world: {
+                asia: "🌏",
+                africa: "🌍", 
+                europe: "🇪🇺",
+                northamerica: "🗽",
+                southamerica: "🦙",
+                oceania: "🏝️"
+            },
+            japan: {
+                hokkaido: "🗾",
+                tohoku: "🍎",
+                kanto: "🏙️",
+                chubu: "🏔️",
+                kinki: "🏯",
+                chugoku: "🌊",
+                shikoku: "🍊",
+                kyushu: "🌋"
+            },
+            heritage: {
+                hokkaido_tohoku: "🏔️",
+                higashi_nihon: "🗾",
+                kansai_chubu: "🏯",
+                nishi_nihon: "🏭",
+                kyushu_okinawa: "🌺"
+            }
+        };
+
+        // ===== 🎵 音響機能（大幅強化版） 🎵 =====
+        let audioContext = null;
+        let audioInitialized = false;
+
+        function initAudio() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    audioInitialized = true;
+                }
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            } catch (e) {
+                console.log('Audio not supported');
+                audioInitialized = false;
+            }
+        }
+
+        function playAdvancedSound(frequencies, durations, types = ['sine'], gains = [0.15]) {
+            if (!audioInitialized || !audioContext) return;
+
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    try {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                        oscillator.type = types[index % types.length];
+                        
+                        const gain = gains[index % gains.length];
+                        gainNode.gain.setValueAtTime(gain, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + durations[index % durations.length]);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + durations[index % durations.length]);
+                    } catch (e) {
+                        console.log('Audio playback failed:', e);
+                    }
+                }, index * 50);
+            });
+        }
+
+        function playEpicSuccessSound() {
+            const frequencies = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+            const durations = [0.3, 0.3, 0.3, 0.4, 0.5];
+            const types = ['sine', 'triangle', 'sine', 'triangle', 'sine'];
+            const gains = [0.2, 0.15, 0.18, 0.12, 0.1];
+            
+            playAdvancedSound(frequencies, durations, types, gains);
+        }
+
+        function playMegaApplauseSound() {
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const freq = 100 + Math.random() * 400;
+                    const gain = 0.05 + Math.random() * 0.1;
+                    playAdvancedSound([freq], [0.08], ['square'], [gain]);
+                }, i * 30);
+            }
+        }
+
+        function playPremiumClickSound() {
+            playAdvancedSound([880, 1108.73], [0.1, 0.08], ['triangle', 'sine'], [0.12, 0.08]);
+        }
+
+        function playDramaticWrongSound() {
+            const frequencies = [300, 250, 200, 150, 100];
+            const durations = [0.15, 0.15, 0.2, 0.25, 0.3];
+            const types = ['sawtooth', 'square', 'sawtooth', 'square', 'sawtooth'];
+            const gains = [0.2, 0.18, 0.16, 0.14, 0.12];
+            
+            playAdvancedSound(frequencies, durations, types, gains);
+        }
+
+        function playGrandCelebrationSound() {
+            const frequencies = [
+                523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98, 2093, 2637,
+                659.25, 783.99, 1046.5, 1318.5, 1567.98, 2093, 2637, 3136
+            ];
+            const durations = Array(16).fill(0.4);
+            const types = ['sine', 'triangle', 'sine', 'triangle'];
+            const gains = Array(16).fill().map((_, i) => 0.15 - i * 0.008);
+            
+            playAdvancedSound(frequencies, durations, types, gains);
+        }
+
+        function playComboSound(comboLevel) {
+            const baseFreqs = [523.25, 659.25, 783.99];
+            const frequencies = baseFreqs.map(f => f * (1 + comboLevel * 0.1));
+            const durations = [0.2, 0.2, 0.3];
+            const gains = [0.15 + comboLevel * 0.02, 0.12 + comboLevel * 0.02, 0.1 + comboLevel * 0.02];
+            
+            playAdvancedSound(frequencies, durations, ['sine'], gains);
+        }
+
+        function playLevelUpSound() {
+            const frequencies = [440, 523.25, 659.25, 783.99, 1046.5];
+            const durations = [0.3, 0.3, 0.3, 0.4, 0.5];
+            const types = ['triangle', 'sine', 'triangle', 'sine', 'triangle'];
+            const gains = [0.18, 0.16, 0.14, 0.12, 0.1];
+            
+            playAdvancedSound(frequencies, durations, types, gains);
+        }
+
+        // ===== クリック音付きイベントハンドラー =====
+        function playClickSoundAndShowMainMenu() {
+            playPremiumClickSound();
+            showMainMenu();
+        }
+
+        function playClickSoundAndGoBack() {
+            playPremiumClickSound();
+            goBack();
+        }
+
+        function playClickSoundAndSelectMainCategory(category) {
+            playPremiumClickSound();
+            selectMainCategory(category);
+        }
+
+        function playClickSoundAndStartMatching() {
+            playPremiumClickSound();
+            startMatchingGame();
+        }
+
+        function playClickSoundAndStartSorting() {
+            playPremiumClickSound();
+            startSortingGame();
+        }
+
+        function playClickSoundAndRestart() {
+            playPremiumClickSound();
+            restartGame();
+        }
+
+        // ===== 🎆 エフェクト関数（大幅強化版） 🎆 =====
+        function createMegaFirework(x, y, colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FCEA2B', '#FF9FF3']) {
+            for (let i = 0; i < 20; i++) {
+                const firework = document.createElement('div');
+                firework.style.position = 'fixed';
+                firework.style.left = x + 'px';
+                firework.style.top = y + 'px';
+                firework.style.width = '12px';
+                firework.style.height = '12px';
+                firework.style.borderRadius = '50%';
+                firework.style.background = colors[Math.floor(Math.random() * colors.length)];
+                firework.style.pointerEvents = 'none';
+                firework.style.zIndex = '9999';
+                firework.style.animation = `megaFireworkExplosion ${1.5 + Math.random() * 0.5}s ease-out ${i * 0.05}s`;
+                firework.style.boxShadow = `0 0 10px ${colors[Math.floor(Math.random() * colors.length)]}`;
+                document.body.appendChild(firework);
+
+                setTimeout(() => {
+                    if (firework.parentNode) {
+                        firework.parentNode.removeChild(firework);
+                    }
+                }, 2000 + i * 50);
+            }
+        }
+
+        function createRainbowConfetti() {
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FCEA2B', '#FF9FF3', '#A8E6CF', '#FFD93D'];
+            
+            for (let i = 0; i < 80; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '-20px';
+                confetti.style.width = (8 + Math.random() * 6) + 'px';
+                confetti.style.height = (8 + Math.random() * 6) + 'px';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.animation = `rainbowConfettiFall ${3 + Math.random() * 2}s linear`;
+                confetti.style.boxShadow = `0 0 8px ${colors[Math.floor(Math.random() * colors.length)]}`;
+                document.body.appendChild(confetti);
+
+                setTimeout(() => {
+                    if (confetti.parentNode) {
+                        confetti.parentNode.removeChild(confetti);
+                    }
+                }, 5000);
+            }
+        }
+
+        function createStarBurst(x, y) {
+            for (let i = 0; i < 12; i++) {
+                const star = document.createElement('div');
+                star.innerHTML = '⭐';
+                star.style.position = 'fixed';
+                star.style.left = x + 'px';
+                star.style.top = y + 'px';
+                star.style.fontSize = (20 + Math.random() * 15) + 'px';
+                star.style.pointerEvents = 'none';
+                star.style.zIndex = '9999';
+                star.style.animation = `megaFireworkExplosion 1.2s ease-out ${i * 0.08}s`;
+                star.style.filter = `hue-rotate(${i * 30}deg) brightness(1.5)`;
+                document.body.appendChild(star);
+
+                setTimeout(() => {
+                    if (star.parentNode) {
+                        star.parentNode.removeChild(star);
+                    }
+                }, 1500 + i * 80);
+            }
+        }
+
+        function createComboEffect(comboCount, x, y) {
+            const comboText = document.createElement('div');
+            comboText.innerHTML = `🔥 ${comboCount}COMBO! 🔥`;
+            comboText.style.position = 'fixed';
+            comboText.style.left = (x - 50) + 'px';
+            comboText.style.top = (y - 30) + 'px';
+            comboText.style.fontSize = (16 + comboCount * 2) + 'px';
+            comboText.style.fontWeight = 'bold';
+            comboText.style.color = '#FF6B35';
+            comboText.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+            comboText.style.pointerEvents = 'none';
+            comboText.style.zIndex = '9999';
+            comboText.style.animation = 'megaFireworkExplosion 1.5s ease-out';
+            document.body.appendChild(comboText);
+
+            setTimeout(() => {
+                if (comboText.parentNode) {
+                    comboText.parentNode.removeChild(comboText);
+                }
+            }, 1500);
+        }
+
+        function triggerScreenShake() {
+            document.body.classList.add('screen-shake');
+            setTimeout(() => {
+                document.body.classList.remove('screen-shake');
+            }, 500);
+        }
+
+        function createFloatingPoints(points, x, y) {
+            const pointsText = document.createElement('div');
+            pointsText.innerHTML = `+${points}`;
+            pointsText.style.position = 'fixed';
+            pointsText.style.left = x + 'px';
+            pointsText.style.top = y + 'px';
+            pointsText.style.fontSize = '20px';
+            pointsText.style.fontWeight = 'bold';
+            pointsText.style.color = '#4CAF50';
+            pointsText.style.textShadow = '1px 1px 2px rgba(0,0,0,0.5)';
+            pointsText.style.pointerEvents = 'none';
+            pointsText.style.zIndex = '9999';
+            pointsText.style.animation = 'megaFireworkExplosion 1s ease-out';
+            document.body.appendChild(pointsText);
+
+            setTimeout(() => {
+                if (pointsText.parentNode) {
+                    pointsText.parentNode.removeChild(pointsText);
+                }
+            }, 1000);
+        }
+
+        // ===== ユーティリティ関数 =====
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // ===== 画面履歴管理 =====
+        function pushScreen(screenId) {
+            try {
+                if (gameState.screenHistory[gameState.screenHistory.length - 1] !== screenId) {
+                    gameState.screenHistory.push(screenId);
+                }
+                gameState.currentScreen = screenId;
+                updateBackButton();
+            } catch (error) {
+                console.error('Error pushing screen:', error);
+            }
+        }
+
+        function popScreen() {
+            try {
+                if (gameState.screenHistory.length > 1) {
+                    gameState.screenHistory.pop();
+                    const previousScreen = gameState.screenHistory[gameState.screenHistory.length - 1];
+                    gameState.currentScreen = previousScreen;
+                    return previousScreen;
+                }
+                return 'mainMenuScreen';
+            } catch (error) {
+                console.error('Error popping screen:', error);
+                return 'mainMenuScreen';
+            }
+        }
+
+        function updateBackButton() {
+            try {
+                const backBtn = document.getElementById('floatingBack');
+                if (backBtn) {
+                    if (gameState.screenHistory.length > 1) {
+                        backBtn.style.display = 'flex';
+                    } else {
+                        backBtn.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating back button:', error);
+            }
+        }
+
+        // ===== 戻る機能 =====
+        function goBack() {
+            try {
+                const previousScreen = popScreen();
+                
+                if (gameState.currentScreen === 'gameScreen' || gameState.currentScreen === 'sortingGameScreen') {
+                    gameState.selectedCard = null;
+                    gameState.selectedSortingCard = null;
+                }
+                
+                showScreen(previousScreen);
+            } catch (error) {
+                console.error('Error going back:', error);
+                showMainMenu();
+            }
+        }
+
+        // ===== メインカテゴリ選択 =====
+        function selectMainCategory(category) {
+            try {
+                initAudio();
+                gameState.mainCategory = category;
+                showCategoryScreen(category);
+            } catch (error) {
+                console.error('Error selecting main category:', error);
+            }
+        }
+
+        // ===== カテゴリ画面表示 =====
+        function showCategoryScreen(category) {
+            try {
+                const data = DATA_MAPPING[category];
+                
+                if (!data) {
+                    console.error(`Data not found for category: ${category}`);
+                    return;
+                }
+
+                const titles = {
+                    world: "🌍 世界の国々",
+                    japan: "🗾 日本の都道府県", 
+                    heritage: "🏯 日本の世界遺産"
+                };
+
+                document.getElementById('categoryTitle').textContent = titles[category];
+                
+                const categoryContainer = document.getElementById('categoryContainer');
+                categoryContainer.innerHTML = '';
+
+                const themeGrid = document.createElement('div');
+                themeGrid.className = 'theme-grid';
+                
+                const subcategories = Object.keys(data);
+                console.log('Subcategories found:', subcategories);
+
+                subcategories.forEach(subKey => {
+                    try {
+                        const subData = data[subKey];
+                        console.log(`Processing subcategory: ${subKey}`, subData);
+                        
+                        const subCard = document.createElement('div');
+                        subCard.className = 'theme-card';
+                        subCard.onclick = () => {
+                            playPremiumClickSound();
+                            selectSubcategory(subKey);
+                        };
+                        
+                        const iconCategory = ICONS[category];
+                        const icon = (iconCategory && iconCategory[subKey]) || subData.emoji || '📍';
+                        subCard.innerHTML = `
+                            <div class="theme-emoji">${icon}</div>
+                            <div class="theme-title">${subData.title}</div>
+                        `;
+                        
+                        themeGrid.appendChild(subCard);
+                    } catch (error) {
+                        console.error(`Error processing subcategory ${subKey}:`, error);
+                    }
+                });
+                
+                categoryContainer.appendChild(themeGrid);
+                
+                showScreen('categoryScreen');
+                
+            } catch (error) {
+                console.error('Error showing category screen:', error);
+            }
+        }
+
+        // ===== サブカテゴリ選択 =====
+        function selectSubcategory(subKey) {
+            try {
+                gameState.currentTheme = subKey;
+                
+                if (gameState.mainCategory === 'japan' || gameState.mainCategory === 'heritage') {
+                    startMatchingGame();
+                } else {
+                    showGameModeSelection(subKey);
+                }
+            } catch (error) {
+                console.error('Error selecting subcategory:', error);
+            }
+        }
+
+        // ===== ゲームモード選択表示 =====
+        function showGameModeSelection(subKey) {
+            try {
+                const data = DATA_MAPPING[gameState.mainCategory][subKey];
+                
+                const iconCategory = ICONS[gameState.mainCategory];
+                const icon = (iconCategory && iconCategory[subKey]) || data.emoji || '📍';
+                const title = `${icon}${data.title}`;
+                
+                document.getElementById('modeTitle').textContent = title;
+                
+                const modeGrid = document.getElementById('modeGrid');
+                modeGrid.innerHTML = '';
+                
+                const matchingCard = document.createElement('div');
+                matchingCard.className = 'mode-card';
+                matchingCard.onclick = () => playClickSoundAndStartMatching();
+                matchingCard.innerHTML = `
+                    <div class="mode-emoji">🔗</div>
+                    <div class="mode-title">マッチング</div>
+                    <div class="mode-description">項目と説明をペアにしよう</div>
+                `;
+                modeGrid.appendChild(matchingCard);
+                
+                if (gameState.mainCategory === 'world') {
+                    const sortingCard = document.createElement('div');
+                    sortingCard.className = 'mode-card';
+                    sortingCard.onclick = () => playClickSoundAndStartSorting();
+                    sortingCard.innerHTML = `
+                        <div class="mode-emoji">👥</div>
+                        <div class="mode-title">人口順並べ</div>
+                        <div class="mode-description">国々を人口順に並べよう</div>
+                    `;
+                    modeGrid.appendChild(sortingCard);
+                }
+                
+                showScreen('gameModeScreen');
+            } catch (error) {
+                console.error('Error showing game mode selection:', error);
+            }
+        }
+
+        // ===== 画面切り替え =====
+        function showScreen(screenId) {
+            try {
+                const screens = ['mainMenuScreen', 'categoryScreen', 'gameModeScreen', 'gameScreen', 'sortingGameScreen', 'resultScreen'];
+                screens.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.style.display = id === screenId ? 'block' : 'none';
+                    }
+                });
+                
+                if (screenId === 'mainMenuScreen') {
+                    gameState.screenHistory = ['mainMenuScreen'];
+                    gameState.currentScreen = 'mainMenuScreen';
+                } else if (gameState.screenHistory[gameState.screenHistory.length - 1] !== screenId) {
+                    gameState.screenHistory.push(screenId);
+                    gameState.currentScreen = screenId;
+                }
+                
+                updateBackButton();
+            } catch (error) {
+                console.error('Error showing screen:', error);
+            }
+        }
+
+        // ===== メインメニュー表示 =====
+        function showMainMenu() {
+            try {
+                showScreen('mainMenuScreen');
+            } catch (error) {
+                console.error('Error showing main menu:', error);
+            }
+        }
+
+        // ===== マッチングゲーム開始 =====
+        function startMatchingGame() {
+            try {
+                gameState.gameMode = 'matching';
+                
+                const data = DATA_MAPPING[gameState.mainCategory][gameState.currentTheme];
+                gameState.currentData = [...data.terms];
+                
+                const iconCategory = ICONS[gameState.mainCategory];
+                const icon = (iconCategory && iconCategory[gameState.currentTheme]) || data.emoji || '📍';
+                initializeMatchingGame(`${icon}${data.title}`);
+            } catch (error) {
+                console.error('Error starting matching game:', error);
+            }
+        }
+
+        // ===== 人口順並べゲーム開始 =====
+        function startSortingGame() {
+            try {
+                gameState.gameMode = 'sorting';
+                
+                const data = DATA_MAPPING[gameState.mainCategory][gameState.currentTheme];
+                gameState.sortingData = [...data.terms];
+                
+                const iconCategory = ICONS[gameState.mainCategory];
+                const icon = (iconCategory && iconCategory[gameState.currentTheme]) || data.emoji || '📍';
+                initializeSortingGame(`${icon}${data.title}`);
+            } catch (error) {
+                console.error('Error starting sorting game:', error);
+            }
+        }
+
+        // ===== マッチングゲーム初期化 =====
+        function initializeMatchingGame(title) {
+            try {
+                console.log('Initializing matching game with data:', gameState.currentData);
+                
+                if (!gameState.currentData || gameState.currentData.length === 0) {
+                    console.error('No data available for matching game!');
+                    alert('データが見つかりません。メニューに戻ります。');
+                    showMainMenu();
+                    return;
+                }
+                
+                gameState.currentData = shuffleArray(gameState.currentData);
+                
+                gameState.score = 0;
+                gameState.matchedPairs = 0;
+                gameState.totalPairs = gameState.currentData.length;
+                gameState.selectedCard = null;
+                gameState.comboCount = 0;
+                gameState.lastMatchTime = 0;
+                
+                document.getElementById('currentTheme').textContent = title;
+                document.getElementById('score').textContent = gameState.score;
+                document.getElementById('total').textContent = gameState.totalPairs;
+                
+                renderMatchingGame();
+                showScreen('gameScreen');
+            } catch (error) {
+                console.error('Error initializing matching game:', error);
+            }
+        }
+
+        // ===== 人口順並べゲーム初期化 =====
+        function initializeSortingGame(title) {
+            try {
+                console.log('Initializing sorting game with data:', gameState.sortingData);
+                
+                if (!gameState.sortingData || gameState.sortingData.length === 0) {
+                    console.error('No data available for sorting game!');
+                    alert('データが見つかりません。メニューに戻ります。');
+                    showMainMenu();
+                    return;
+                }
+                
+                gameState.score = 0;
+                gameState.totalPairs = gameState.sortingData.length;
+                gameState.placedCards = [];
+                gameState.selectedSortingCard = null;
+                gameState.comboCount = 0;
+                
+                document.getElementById('sortingTheme').textContent = title;
+                document.getElementById('sortingScore').textContent = gameState.score;
+                document.getElementById('sortingTotal').textContent = gameState.totalPairs;
+                
+                renderSortingGame();
+                showScreen('sortingGameScreen');
+            } catch (error) {
+                console.error('Error initializing sorting game:', error);
+            }
+        }
+
+        // ===== マッチングゲーム描画 =====
+        function renderMatchingGame() {
+            try {
+                console.log('Rendering matching game with data:', gameState.currentData);
+                const leftColumn = document.getElementById('leftColumn');
+                const rightColumn = document.getElementById('rightColumn');
+                
+                leftColumn.innerHTML = '';
+                rightColumn.innerHTML = '';
+                
+                const terms = shuffleArray(gameState.currentData.map(item => item.term));
+                const descriptions = shuffleArray(gameState.currentData.map(item => item.description));
+                
+                console.log('Terms:', terms);
+                console.log('Descriptions:', descriptions);
+                
+                terms.forEach((term, index) => {
+                    const card = createCard(term, 'term', index);
+                    leftColumn.appendChild(card);
+                });
+                
+                descriptions.forEach((desc, index) => {
+                    const card = createCard(desc, 'description', index);
+                    rightColumn.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error rendering matching game:', error);
+            }
+        }
+
+        // ===== 人口順並べゲーム描画 =====
+        function renderSortingGame() {
+            try {
+                console.log('Rendering sorting game with data:', gameState.sortingData);
+                
+                const dropSlots = document.getElementById('dropSlots');
+                dropSlots.innerHTML = '';
+                
+                gameState.sortingData.forEach((item, index) => {
+                    const slot = document.createElement('div');
+                    slot.className = 'drop-slot';
+                    slot.dataset.position = index;
+                    slot.setAttribute('data-position', `${index + 1}位`);
+                    slot.textContent = `${index + 1}位`;
+                    slot.onclick = () => placeSortingCard(slot, index);
+                    dropSlots.appendChild(slot);
+                });
+                
+                const sourceCards = document.getElementById('sourceCards');
+                sourceCards.innerHTML = '';
+                
+                const shuffledData = shuffleArray([...gameState.sortingData]);
+                shuffledData.forEach((item, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'sorting-card';
+                    card.innerHTML = `<strong>${item.term}</strong><small>${item.description}</small>`;
+                    card.dataset.originalIndex = gameState.sortingData.findIndex(orig => orig.term === item.term);
+                    card.dataset.term = item.term;
+                    card.onclick = () => selectSortingCard(card);
+                    sourceCards.appendChild(card);
+                });
+                
+            } catch (error) {
+                console.error('Error rendering sorting game:', error);
+            }
+        }
+
+        // ===== カード作成 =====
+        function createCard(text, type, index) {
+            try {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<div class="card-text">${text}</div>`;
+                card.dataset.type = type;
+                card.dataset.text = text;
+                card.onclick = () => selectCard(card);
+                
+                card.style.animationDelay = (Math.random() * 0.5) + 's';
+                card.style.animation = 'bounce 0.6s ease-out forwards';
+                
+                return card;
+            } catch (error) {
+                console.error('Error creating card:', error);
+                return document.createElement('div');
+            }
+        }
+
+        // ===== 人口順並べ：カード選択 =====
+        function selectSortingCard(card) {
+            try {
+                playPremiumClickSound();
+                
+                if (card.classList.contains('placed')) return;
+                
+                if (gameState.selectedSortingCard) {
+                    gameState.selectedSortingCard.classList.remove('selected');
+                }
+                
+                if (gameState.selectedSortingCard === card) {
+                    gameState.selectedSortingCard = null;
+                } else {
+                    card.classList.add('selected');
+                    gameState.selectedSortingCard = card;
+                }
+            } catch (error) {
+                console.error('Error selecting sorting card:', error);
+            }
+        }
+
+        // ===== 人口順並べ：カード配置/戻す機能（エフェクト強化版） =====
+        function placeSortingCard(slot, position) {
+            try {
+                if (slot.classList.contains('filled')) {
+                    const cardIndex = parseInt(slot.dataset.cardIndex);
+                    
+                    const sourceCards = document.getElementById('sourceCards');
+                    const allCards = sourceCards.querySelectorAll('.sorting-card');
+                    
+                    for (let card of allCards) {
+                        if (parseInt(card.dataset.originalIndex) === cardIndex) {
+                            card.classList.remove('placed');
+                            card.style.display = 'block';
+                            break;
+                        }
+                    }
+                    
+                    slot.innerHTML = '';
+                    slot.classList.remove('filled', 'correct', 'wrong');
+                    slot.textContent = `${position + 1}位`;
+                    delete slot.dataset.cardIndex;
+                    
+                    gameState.placedCards[position] = undefined;
+                    
+                    if (cardIndex === position) {
+                        gameState.score = Math.max(0, gameState.score - 1);
+                        document.getElementById('sortingScore').textContent = gameState.score;
+                    }
+                    
+                    const progress = (gameState.placedCards.filter(item => item !== undefined).length / gameState.totalPairs) * 100;
+                    document.getElementById('sortingProgressFill').style.width = progress + '%';
+                    
+                    playPremiumClickSound();
+                    return;
+                }
+                
+                if (!gameState.selectedSortingCard) return;
+                
+                playPremiumClickSound();
+                
+                const card = gameState.selectedSortingCard;
+                const originalIndex = parseInt(card.dataset.originalIndex);
+                const term = card.dataset.term;
+                const description = gameState.sortingData[originalIndex].description;
+                
+                slot.innerHTML = `<strong>${term}</strong><small>${description}</small>`;
+                slot.classList.add('filled');
+                slot.dataset.cardIndex = originalIndex;
+                
+                card.classList.add('placed');
+                card.classList.remove('selected');
+                gameState.selectedSortingCard = null;
+                
+                gameState.placedCards[position] = originalIndex;
+                
+                const rect = slot.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                if (originalIndex === position) {
+                    gameState.score++;
+                    gameState.comboCount++;
+                    
+                    playEpicSuccessSound();
+                    playMegaApplauseSound();
+                    playComboSound(gameState.comboCount);
+                    
+                    slot.classList.add('correct');
+                    
+                    createMegaFirework(centerX, centerY);
+                    createStarBurst(centerX, centerY);
+                    createFloatingPoints(100 * gameState.comboCount, centerX, centerY - 30);
+                    
+                    if (gameState.comboCount >= 3) {
+                        createComboEffect(gameState.comboCount, centerX, centerY);
+                        triggerScreenShake();
+                    }
+                    
+                    const scoreBoard = document.getElementById('sortingScoreBoard');
+                    scoreBoard.classList.add('combo-glow');
+                    setTimeout(() => scoreBoard.classList.remove('combo-glow'), 1000);
+                    
+                } else {
+                    gameState.comboCount = 0;
+                    
+                    playDramaticWrongSound();
+                    slot.classList.add('wrong');
+                    triggerScreenShake();
+                    
+                    setTimeout(() => {
+                        slot.classList.remove('wrong');
+                    }, 1200);
+                }
+                
+                document.getElementById('sortingScore').textContent = gameState.score;
+                const progress = (gameState.placedCards.filter(item => item !== undefined).length / gameState.totalPairs) * 100;
+                document.getElementById('sortingProgressFill').style.width = progress + '%';
+                
+                if (gameState.placedCards.filter(item => item !== undefined).length === gameState.totalPairs) {
+                    setTimeout(showResult, 2000);
+                }
+                
+            } catch (error) {
+                console.error('Error placing sorting card:', error);
+            }
+        }
+
+        // ===== カード選択（マッチング・エフェクト強化版） =====
+        function selectCard(card) {
+            try {
+                playPremiumClickSound();
+                
+                if (card.classList.contains('matched')) return;
+                
+                if (gameState.selectedCard) {
+                    if (gameState.selectedCard === card) {
+                        gameState.selectedCard.classList.remove('selected');
+                        gameState.selectedCard = null;
+                        return;
+                    }
+                    
+                    checkMatch(gameState.selectedCard, card);
+                } else {
+                    card.classList.add('selected');
+                    gameState.selectedCard = card;
+                }
+            } catch (error) {
+                console.error('Error selecting card:', error);
+            }
+        }
+
+        // ===== マッチング判定（エフェクト強化版） =====
+        function checkMatch(card1, card2) {
+            try {
+                const text1 = card1.dataset.text;
+                const text2 = card2.dataset.text;
+                
+                let isMatch = false;
+                for (let item of gameState.currentData) {
+                    if ((item.term === text1 && item.description === text2) || 
+                        (item.term === text2 && item.description === text1)) {
+                        isMatch = true;
+                        break;
+                    }
+                }
+                
+                const rect1 = card1.getBoundingClientRect();
+                const rect2 = card2.getBoundingClientRect();
+                const centerX1 = rect1.left + rect1.width / 2;
+                const centerY1 = rect1.top + rect1.height / 2;
+                const centerX2 = rect2.left + rect2.width / 2;
+                const centerY2 = rect2.top + rect2.height / 2;
+                
+                if (isMatch) {
+                    const currentTime = Date.now();
+                    if (currentTime - gameState.lastMatchTime < 3000) {
+                        gameState.comboCount++;
+                    } else {
+                        gameState.comboCount = 1;
+                    }
+                    gameState.lastMatchTime = currentTime;
+                    
+                    card1.classList.remove('selected');
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    
+                    gameState.score++;
+                    gameState.matchedPairs++;
+                    
+                    playEpicSuccessSound();
+                    playMegaApplauseSound();
+                    playComboSound(gameState.comboCount);
+                    
+                    createMegaFirework(centerX1, centerY1);
+                    createMegaFirework(centerX2, centerY2);
+                    createStarBurst(centerX1, centerY1);
+                    createStarBurst(centerX2, centerY2);
+                    createFloatingPoints(100 * gameState.comboCount, centerX1, centerY1 - 30);
+                    createFloatingPoints(100 * gameState.comboCount, centerX2, centerY2 - 30);
+                    
+                    if (gameState.comboCount >= 3) {
+                        createComboEffect(gameState.comboCount, (centerX1 + centerX2) / 2, (centerY1 + centerY2) / 2);
+                        triggerScreenShake();
+                    }
+                    
+                    const scoreBoard = document.getElementById('scoreBoard');
+                    scoreBoard.classList.add('combo-glow');
+                    setTimeout(() => scoreBoard.classList.remove('combo-glow'), 1000);
+                    
+                    document.getElementById('score').textContent = gameState.score;
+                    const progress = (gameState.matchedPairs / gameState.totalPairs) * 100;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    
+                    if (gameState.matchedPairs === gameState.totalPairs) {
+                        setTimeout(showResult, 2000);
+                    }
+                } else {
+                    gameState.comboCount = 0;
+                    
+                    card1.classList.add('wrong');
+                    card2.classList.add('wrong');
+                    
+                    playDramaticWrongSound();
+                    triggerScreenShake();
+                    
+                    setTimeout(() => {
+                        card1.classList.remove('selected', 'wrong');
+                        card2.classList.remove('wrong');
+                    }, 1200);
+                }
+                
+                gameState.selectedCard = null;
+            } catch (error) {
+                console.error('Error checking match:', error);
+            }
+        }
+
+        // ===== 結果表示（エフェクト強化版） =====
+        function showResult() {
+            try {
+                playGrandCelebrationSound();
+                playLevelUpSound();
+                createRainbowConfetti();
+                
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => {
+                        createMegaFirework(
+                            Math.random() * window.innerWidth,
+                            Math.random() * window.innerHeight
+                        );
+                        createStarBurst(
+                            Math.random() * window.innerWidth,
+                            Math.random() * window.innerHeight
+                        );
+                    }, i * 200);
+                }
+                
+                triggerScreenShake();
+                
+                const percentage = Math.round((gameState.score / gameState.totalPairs) * 100);
+                document.getElementById('finalScore').textContent = 
+                    `${gameState.score}/${gameState.totalPairs}問正解！ (${percentage}%)`;
+                
+                showScreen('resultScreen');
+                document.querySelector('.result-content').classList.add('celebrate');
+            } catch (error) {
+                console.error('Error showing result:', error);
+            }
+        }
+
+        // ===== ゲーム再開 =====
+        function restartGame() {
+            try {
+                if (gameState.gameMode === 'matching') {
+                    startMatchingGame();
+                } else if (gameState.gameMode === 'sorting') {
+                    startSortingGame();
+                }
+            } catch (error) {
+                console.error('Error restarting game:', error);
+            }
+        }
+
+        // ===== ページロード時の初期化 =====
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('ワールドチェック - loaded');
+            showMainMenu();
+            updateBackButton();
+            
+            document.addEventListener('click', initAudio, { once: true });
+            document.addEventListener('touchstart', initAudio, { once: true });
+        });
+    </script>
+</body>
+</html>
